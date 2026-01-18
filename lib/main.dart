@@ -44,6 +44,8 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
   String _language = 'Arabic';
   
   final Map<int, bool> _completedZikrs = {};
+  bool _isScrollingToStart = false;
+  int _resetVersion = 0;
 
   final Map<String, Map<String, String>> _translations = {
     'Arabic': {
@@ -117,7 +119,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
   }
 
   void _handleScroll() {
-    if (!_showCounter) {
+    if (!_showCounter && !_isScrollingToStart) {
       int currentPage = _pageController.page?.round() ?? 0;
       if (!_completedZikrs.containsKey(currentPage) || _completedZikrs[currentPage] == false) {
         setState(() {
@@ -171,13 +173,25 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
 
   void _scrollToStart() {
     setState(() {
+      _isScrollingToStart = true;
       _completedZikrs.clear();
+      _resetVersion++;
     });
     _pageController.animateToPage(
       0,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1200),
       curve: Curves.easeInOutExpo,
-    );
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          _isScrollingToStart = false;
+          // Mark the first page as done if counter is off
+          if (!_showCounter) {
+            _completedZikrs[0] = true;
+          }
+        });
+      }
+    });
   }
 
   void _markAsDone(int index) {
@@ -291,6 +305,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
             itemCount: azkarList.length,
             itemBuilder: (context, index) {
               return AzkarCard(
+                key: ValueKey('zikr_${index}_$_resetVersion'),
                 zikr: azkarList[index],
                 fontSize: _baseFontSize,
                 index: index + 1,
