@@ -53,9 +53,12 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter_launcher_icons:
-  android: "ic_launcher"
+  android: true
   ios: true
-  image_path: "assets/images/icon.png"
+  image_path: "assets/images/Generated Image January 25, 2026 - 9_14PM.png"
+  adaptive_icon_background: "#064D3B"
+  adaptive_icon_foreground: "assets/images/icon_foreground.png"
+  remove_alpha_ios: true
   min_sdk_android: 21 # android min sdk version
 
 # For information on the generic Dart part of this file, see the
