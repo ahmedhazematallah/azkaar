@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:ui';
 import 'data/azkar_data.dart';
 
@@ -56,6 +57,10 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'back_to_start': 'العودة للبداية',
       'done': 'تم الانتهاء من هذا الذكر',
       'app_title': 'أذكار',
+      'about': 'حول التطبيق',
+      'version': 'الإصدار',
+      'about_desc': 'تطبيق أذكار المسلم اليومية',
+      'developer': 'المطور',
     },
     'English': {
       'settings': 'Settings',
@@ -65,6 +70,10 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'back_to_start': 'Back to Start',
       'done': 'Zikr Completed',
       'app_title': 'Azkaar',
+      'about': 'About',
+      'version': 'Version',
+      'about_desc': 'Daily Muslim Azkar App',
+      'developer': 'Developer',
     },
     'French': {
       'settings': 'Paramètres',
@@ -74,6 +83,10 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'back_to_start': 'Retour au début',
       'done': 'Zikr terminé',
       'app_title': 'Azkaar',
+      'about': 'À propos',
+      'version': 'Version',
+      'about_desc': 'Application quotidienne d\'Azkar musulman',
+      'developer': 'Développeur',
     },
     'German': {
       'settings': 'Einstellungen',
@@ -83,6 +96,10 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'back_to_start': 'Zurück zum Anfang',
       'done': 'Zikr abgeschlossen',
       'app_title': 'Azkaar',
+      'about': 'Über',
+      'version': 'Version',
+      'about_desc': 'Tägliche muslimische Azkar-App',
+      'developer': 'Entwickler',
     },
     'Japanese': {
       'settings': '設定',
@@ -92,6 +109,10 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'back_to_start': '最初に戻る',
       'done': '完了しました',
       'app_title': 'アズカール',
+      'about': 'について',
+      'version': 'バージョン',
+      'about_desc': '毎日のイスラム教のアズカールアプリ',
+      'developer': '開発者',
     },
     'Chinese': {
       'settings': '设置',
@@ -101,6 +122,10 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'back_to_start': '回到开始',
       'done': '已完成',
       'app_title': '阿兹卡尔',
+      'about': '关于',
+      'version': '版本',
+      'about_desc': '每日穆斯林阿兹卡尔应用',
+      'developer': '开发者',
     },
   };
 
@@ -275,6 +300,146 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
     );
   }
 
+  void _openAbout() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF064D3B), Color(0xFF0A7D60)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF064D3B).withOpacity(0.5),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.mosque_rounded,
+                        color: Color(0xFFC5A358),
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      t('app_title'),
+                      style: GoogleFonts.amiri(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      t('about_desc'),
+                      style: GoogleFonts.amiri(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${t('version')}: ',
+                            style: GoogleFonts.amiri(
+                              fontSize: 16,
+                              color: Colors.white54,
+                            ),
+                          ),
+                          Text(
+                            packageInfo.version,
+                            style: GoogleFonts.amiri(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFC5A358),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${t('developer')}: ',
+                            style: GoogleFonts.amiri(
+                              fontSize: 16,
+                              color: Colors.white54,
+                            ),
+                          ),
+                          Text(
+                            'Ahmed Hazem Atallah',
+                            style: GoogleFonts.amiri(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        '✕',
+                        style: GoogleFonts.amiri(
+                          fontSize: 20,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   double _getCompletionPercentage() {
     int total = azkarList.length;
     int completed = _completedZikrs.values.where((v) => v).length;
@@ -366,10 +531,19 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
                   ),
                 ).animate().fadeIn(duration: 800.ms).slideY(begin: -0.5, end: 0),
                 
-                IconButton(
-                  onPressed: _openSettings,
-                  icon: const Icon(Icons.settings, color: Colors.white70),
-                ).animate().fadeIn(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: _openAbout,
+                      icon: const Icon(Icons.info_outline, color: Colors.white70),
+                    ).animate().fadeIn(),
+                    IconButton(
+                      onPressed: _openSettings,
+                      icon: const Icon(Icons.settings, color: Colors.white70),
+                    ).animate().fadeIn(),
+                  ],
+                ),
               ],
             ),
           ),
