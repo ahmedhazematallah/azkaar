@@ -1,4 +1,4 @@
-# Azkaar - Islamic Supplications App
+# Scroll Azkaar - Islamic Supplications App
 
 A premium Flutter application for daily Islamic Azkar, featuring a modern "Shorts-style" vertical scroll interface and a beautiful Islamic aesthetic.
 

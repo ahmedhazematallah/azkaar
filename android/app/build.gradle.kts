@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 
 plugins {
     id("com.android.application")
@@ -12,6 +13,16 @@ android {
     namespace = "com.ahmedhazematallah.azkar.azkaar"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs.all {
+            val output = this
+            if (output is ApkVariantOutputImpl) {
+                output.outputFileName = "scroll_azkaar.apk"
+            }
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

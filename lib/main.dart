@@ -5,19 +5,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:ui';
-import 'data/azkar_data.dart';
+import 'data/azkar_data.dart' as data;
+import 'data/azkar_data.dart' show Zikr;
 
 void main() {
-  runApp(const AzkaarApp());
+  runApp(const ScrollAzkaarApp());
 }
 
-class AzkaarApp extends StatelessWidget {
-  const AzkaarApp({super.key});
+class ScrollAzkaarApp extends StatelessWidget {
+  const ScrollAzkaarApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Azkaar',
+      title: 'Scroll Azkaar',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -43,10 +44,20 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
   double _baseFontSize = 26.0;
   bool _showCounter = false; // Default OFF as requested
   String _language = 'Arabic';
+  late bool _isMorning;
   
   final Map<int, bool> _completedZikrs = {};
   bool _isScrollingToStart = false;
   int _resetVersion = 0;
+
+  List<Zikr> get _filteredAzkar {
+    return data.azkarList.where((z) {
+      if (z.timeOfDay == data.TimeOfDay.both) return true;
+      if (_isMorning && z.timeOfDay == data.TimeOfDay.morning) return true;
+      if (!_isMorning && z.timeOfDay == data.TimeOfDay.evening) return true;
+      return false;
+    }).toList();
+  }
 
   final Map<String, Map<String, String>> _translations = {
     'Arabic': {
@@ -56,7 +67,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'language': 'اللغة',
       'back_to_start': 'العودة للبداية',
       'done': 'تم الانتهاء من هذا الذكر',
-      'app_title': 'أذكار',
+      'app_title': 'Scroll Azkaar',
       'about': 'حول التطبيق',
       'version': 'الإصدار',
       'about_desc': 'تطبيق أذكار المسلم اليومية',
@@ -69,7 +80,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'language': 'Language',
       'back_to_start': 'Back to Start',
       'done': 'Zikr Completed',
-      'app_title': 'Azkaar',
+      'app_title': 'Scroll Azkaar',
       'about': 'About',
       'version': 'Version',
       'about_desc': 'Daily Muslim Azkar App',
@@ -82,7 +93,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'language': 'Langue',
       'back_to_start': 'Retour au début',
       'done': 'Zikr terminé',
-      'app_title': 'Azkaar',
+      'app_title': 'Scroll Azkaar',
       'about': 'À propos',
       'version': 'Version',
       'about_desc': 'Application quotidienne d\'Azkar musulman',
@@ -95,7 +106,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'language': 'Sprache',
       'back_to_start': 'Zurück zum Anfang',
       'done': 'Zikr abgeschlossen',
-      'app_title': 'Azkaar',
+      'app_title': 'Scroll Azkaar',
       'about': 'Über',
       'version': 'Version',
       'about_desc': 'Tägliche muslimische Azkar-App',
@@ -108,7 +119,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'language': '言語',
       'back_to_start': '最初に戻る',
       'done': '完了しました',
-      'app_title': 'アズカール',
+      'app_title': 'Scroll Azkaar',
       'about': 'について',
       'version': 'バージョン',
       'about_desc': '毎日のイスラム教のアズカールアプリ',
@@ -121,7 +132,7 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
       'language': '语言',
       'back_to_start': '回到开始',
       'done': '已完成',
-      'app_title': '阿兹卡尔',
+      'app_title': 'Scroll Azkaar',
       'about': '关于',
       'version': '版本',
       'about_desc': '每日穆斯林阿兹卡尔应用',
@@ -132,6 +143,8 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
   @override
   void initState() {
     super.initState();
+    final hour = DateTime.now().hour;
+    _isMorning = hour < 12; // midnight to noon = morning
     _loadSettings();
     _pageController.addListener(_handleScroll);
   }
@@ -225,12 +238,22 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
     });
   }
 
+  void _toggleTimeOfDay() {
+    setState(() {
+      _isMorning = !_isMorning;
+      _completedZikrs.clear();
+      _resetVersion++;
+      _pageController.jumpToPage(0);
+    });
+  }
+
   String t(String key) => _translations[_language]?[key] ?? key;
 
-  void _openSettings() {
+  void _openMenu() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -241,52 +264,73 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withOpacity(0.8),
                     border: Border.all(color: Colors.white10),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        t('settings'),
-                        style: GoogleFonts.amiri(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                       const SizedBox(height: 20),
-                      SwitchListTile(
-                        title: Text(t('enable_counter'), style: GoogleFonts.amiri(color: Colors.white)),
-                        subtitle: Text(t('counter_desc'), style: GoogleFonts.amiri(color: Colors.white54, fontSize: 12)),
-                        value: _showCounter,
-                        activeColor: const Color(0xFFC5A358),
-                        onChanged: (val) {
-                          setModalState(() => _showCounter = val);
-                          setState(() => _showCounter = val);
-                          _saveCounterSetting(val);
-                          if (!val) {
-                             _markAsDone(_pageController.page?.round() ?? 0);
-                          }
-                        },
+                      const SizedBox(height: 10),
+                      ExpansionTile(
+                        leading: const Icon(Icons.settings, color: Color(0xFFC5A358)),
+                        title: Text(t('settings'), style: GoogleFonts.amiri(color: Colors.white, fontSize: 18)),
+                        iconColor: const Color(0xFFC5A358),
+                        collapsedIconColor: Colors.white70,
+                        children: [
+                          SwitchListTile(
+                            title: Text(t('enable_counter'), style: GoogleFonts.amiri(color: Colors.white)),
+                            subtitle: Text(t('counter_desc'), style: GoogleFonts.amiri(color: Colors.white54, fontSize: 12)),
+                            value: _showCounter,
+                            activeColor: const Color(0xFFC5A358),
+                            onChanged: (val) {
+                              setModalState(() => _showCounter = val);
+                              setState(() => _showCounter = val);
+                              _saveCounterSetting(val);
+                              if (!val) {
+                                 _markAsDone(_pageController.page?.round() ?? 0);
+                              }
+                            },
+                          ),
+                          ListTile(
+                            title: Text(t('language'), style: GoogleFonts.amiri(color: Colors.white)),
+                            trailing: DropdownButton<String>(
+                              value: _language,
+                              dropdownColor: Colors.black87,
+                              underline: Container(),
+                              items: _translations.keys.map((String lang) {
+                                return DropdownMenuItem<String>(
+                                  value: lang,
+                                  child: Text(lang, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  setModalState(() => _language = newValue);
+                                  setState(() => _language = newValue);
+                                  _saveLanguageSetting(newValue);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      const Divider(color: Colors.white10),
+                      const SizedBox(height: 8),
                       ListTile(
-                        title: Text(t('language'), style: GoogleFonts.amiri(color: Colors.white)),
-                        trailing: DropdownButton<String>(
-                          value: _language,
-                          dropdownColor: Colors.black87,
-                          underline: Container(),
-                          items: _translations.keys.map((String lang) {
-                            return DropdownMenuItem<String>(
-                              value: lang,
-                              child: Text(lang, style: const TextStyle(color: Colors.white, fontSize: 14)),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            if (newValue != null) {
-                              setModalState(() => _language = newValue);
-                              setState(() => _language = newValue);
-                              _saveLanguageSetting(newValue);
-                            }
-                          },
-                        ),
+                        leading: const Icon(Icons.info_outline, color: Color(0xFFC5A358)),
+                        title: Text(t('about'), style: GoogleFonts.amiri(color: Colors.white, fontSize: 18)),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _openAbout();
+                        },
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -391,34 +435,6 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${t('developer')}: ',
-                            style: GoogleFonts.amiri(
-                              fontSize: 16,
-                              color: Colors.white54,
-                            ),
-                          ),
-                          Text(
-                            'Ahmed Hazem Atallah',
-                            style: GoogleFonts.amiri(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 24),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
@@ -441,9 +457,9 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
   }
 
   double _getCompletionPercentage() {
-    int total = azkarList.length;
+    int total = _filteredAzkar.length;
     int completed = _completedZikrs.values.where((v) => v).length;
-    return (completed / total);
+    return total > 0 ? (completed / total) : 0;
   }
 
   @override
@@ -467,19 +483,21 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
           PageView.builder(
             controller: _pageController,
             scrollDirection: Axis.vertical,
-            itemCount: azkarList.length,
+            itemCount: _filteredAzkar.length,
             itemBuilder: (context, index) {
+              final filtered = _filteredAzkar;
               return AzkarCard(
                 key: ValueKey('zikr_${index}_$_resetVersion'),
-                zikr: azkarList[index],
+                zikr: filtered[index],
                 fontSize: _baseFontSize,
                 index: index + 1,
-                total: azkarList.length,
+                total: filtered.length,
                 showCounter: _showCounter,
                 onDone: () => _markAsDone(index),
-                onScrollToStart: index == azkarList.length - 1 ? _scrollToStart : null,
+                onScrollToStart: index == filtered.length - 1 ? _scrollToStart : null,
                 backToStartLabel: t('back_to_start'),
                 doneMessage: t('done'),
+                categoryLabel: _isMorning ? 'أذكار الصباح' : 'أذكار المساء',
               );
             },
           ),
@@ -490,27 +508,44 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  width: 50,
-                  height: 50,
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 0,
-                      centerSpaceRadius: 15,
-                      sections: [
-                        PieChartSectionData(
-                          color: const Color(0xFFC5A358),
-                          value: completion * 100,
-                          title: '',
-                          radius: 8,
-                        ),
-                        PieChartSectionData(
-                          color: Colors.white12,
-                          value: (1 - completion) * 100,
-                          title: '',
-                          radius: 8,
+                GestureDetector(
+                  onTap: _toggleTimeOfDay,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOutCubic,
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: _isMorning
+                            ? [const Color(0xFFF5C842), const Color(0xFFE8A317)]
+                            : [const Color(0xFF1A237E), const Color(0xFF283593)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _isMorning
+                              ? const Color(0xFFF5C842).withOpacity(0.5)
+                              : const Color(0xFF1A237E).withOpacity(0.5),
+                          blurRadius: 15,
+                          spreadRadius: 2,
                         ),
                       ],
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (child, anim) => RotationTransition(
+                        turns: Tween(begin: 0.5, end: 1.0).animate(anim),
+                        child: FadeTransition(opacity: anim, child: child),
+                      ),
+                      child: Icon(
+                        _isMorning ? Icons.wb_sunny_rounded : Icons.nightlight_round,
+                        key: ValueKey(_isMorning),
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ),
                 ).animate().scale().fadeIn(),
@@ -531,21 +566,40 @@ class _AzkarFeedPageState extends State<AzkarFeedPage> {
                   ),
                 ).animate().fadeIn(duration: 800.ms).slideY(begin: -0.5, end: 0),
                 
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: _openAbout,
-                      icon: const Icon(Icons.info_outline, color: Colors.white70),
-                    ).animate().fadeIn(),
-                    IconButton(
-                      onPressed: _openSettings,
-                      icon: const Icon(Icons.settings, color: Colors.white70),
-                    ).animate().fadeIn(),
-                  ],
-                ),
+                IconButton(
+                  onPressed: _openMenu,
+                  icon: const Icon(Icons.menu_rounded, color: Colors.white70, size: 28),
+                ).animate().fadeIn(),
               ],
             ),
+          ),
+          Positioned(
+            left: 20,
+            bottom: 40,
+            child: SizedBox(
+              width: 50,
+              height: 50,
+              child: PieChart(
+                PieChartData(
+                  sectionsSpace: 0,
+                  centerSpaceRadius: 15,
+                  sections: [
+                    PieChartSectionData(
+                      color: const Color(0xFFC5A358),
+                      value: completion * 100,
+                      title: '',
+                      radius: 8,
+                    ),
+                    PieChartSectionData(
+                      color: Colors.white12,
+                      value: (1 - completion) * 100,
+                      title: '',
+                      radius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(delay: 1.seconds).slideX(begin: -1, end: 0),
           ),
           Positioned(
             right: 20,
@@ -584,6 +638,7 @@ class AzkarCard extends StatefulWidget {
   final VoidCallback? onScrollToStart;
   final String backToStartLabel;
   final String doneMessage;
+  final String categoryLabel;
 
   const AzkarCard({
     super.key,
@@ -596,6 +651,7 @@ class AzkarCard extends StatefulWidget {
     this.onScrollToStart,
     required this.backToStartLabel,
     required this.doneMessage,
+    required this.categoryLabel,
   });
 
   @override
@@ -645,6 +701,18 @@ class _AzkarCardState extends State<AzkarCard> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Top scroll hint
+                  if (widget.index > 1)
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true))
+                     .moveY(begin: -3, end: 3, duration: 1200.ms, curve: Curves.easeInOut),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -656,7 +724,7 @@ class _AzkarCardState extends State<AzkarCard> {
                         ),
                       ),
                       Text(
-                        widget.zikr.category,
+                        widget.categoryLabel,
                         style: GoogleFonts.amiri(
                           color: const Color(0xFFC5A358),
                           fontSize: 18,
@@ -756,6 +824,18 @@ class _AzkarCardState extends State<AzkarCard> {
                       ),
                     ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.5, end: 0),
                   ],
+                  // Bottom scroll hint
+                  if (widget.index < widget.total)
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(top: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.25),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true))
+                     .moveY(begin: 3, end: -3, duration: 1200.ms, curve: Curves.easeInOut),
                 ],
               ),
             ),
